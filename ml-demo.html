@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Demo</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        nav {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #f0f0f0;
+            font-size: 16px;
+        }
+
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .method-container {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .upload-container {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            margin: 20px 0;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-container:hover {
+            border-color: #007bff;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .preview-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+
+        .camera-container {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #videoElement {
+            width: 100%;
+            border-radius: 8px;
+            background: #ddd;
+        }
+
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .match {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .no-match {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <h1>Face Recognition Demo</h1>
+            <div class="user-info">
+                <span id="userEmail"></span>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="demo-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="train">Train Model</button>
+            <button class="tab-button" data-tab="verify">Verify Face</button>
+        </div>
+
+        <!-- Train Tab -->
+        <div id="trainTab" class="tab-content active">
+            <h2>Train Your Face Model</h2>
+            
+            <div class="input-methods">
+                <!-- Photo Upload Section -->
+                <div class="method-container">
+                    <h3>Upload Photos</h3>
+                    <div class="upload-container">
+                        <input type="file" id="fileInput" accept="image/*" multiple>
+                        <button id="uploadButton" class="btn btn-primary">Choose Photos</button>
+                        <div id="previewContainer" class="preview-container"></div>
+                    </div>
+                </div>
+
+                <!-- Camera Section -->
+                <div class="method-container">
+                    <h3>Use Camera</h3>
+                    <div class="camera-container">
+                        <video id="videoElement" autoplay playsinline></video>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button id="switchCamera" class="btn btn-secondary">Switch Camera</button>
+                        <button id="captureButton" class="btn btn-primary">Capture Photo</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="trainButton" class="btn btn-primary" disabled>Train Model</button>
+            </div>
+        </div>
+
+        <!-- Verify Tab -->
+        <div id="verifyTab" class="tab-content">
+            <h2>Verify Face</h2>
+            <div class="input-methods">
+                <!-- Similar structure to train tab -->
+            </div>
+        </div>
+
+        <div id="resultContainer" class="result-container"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // File Upload Handling
+            const fileInput = document.getElementById('fileInput');
+            const uploadButton = document.getElementById('uploadButton');
+            const previewContainer = document.getElementById('previewContainer');
+            const trainButton = document.getElementById('trainButton');
+            
+            // Trigger file input when button is clicked
+            uploadButton.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function(e) {
+                // Clear previous previews
+                previewContainer.innerHTML = '';
+                
+                // Get selected files
+                const files = e.target.files;
+                
+                // Enable train button if files are selected
+                trainButton.disabled = files.length === 0;
+                
+                // Preview each selected image
+                for(let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Only handle image files
+                    if (!file.type.startsWith('image/')) continue;
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const img = document.createElement('img');
+                        img.classList.add('preview-image');
+                        img.src = event.target.result;
+                        previewContainer.appendChild(img);
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Tab Switching
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.dataset.tab;
+                    
+                    // Update active button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update active content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}Tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Camera Handling
+            const video = document.getElementById('videoElement');
+            const switchCameraButton = document.getElementById('switchCamera');
+            const captureButton = document.getElementById('captureButton');
+            let currentStream = null;
+            let facingMode = 'user';
+
+            async function initializeCamera() {
+                try {
+                    if (currentStream) {
+                        currentStream.getTracks().forEach(track => track.stop());
+                    }
+
+                    const constraints = {
+                        video: {
+                            facingMode: facingMode,
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    };
+
+                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = currentStream;
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    alert('Error accessing camera. Please ensure you have granted camera permissions.');
+                }
+            }
+
+            // Initialize camera
+            initializeCamera();
+
+            // Switch camera
+            switchCameraButton.addEventListener('click', () => {
+                facingMode = facingMode === 'user' ? 'environment' : 'user';
+                initializeCamera();
+            });
+
+            // Capture photo
+            captureButton.addEventListener('click', () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                // Create preview image
+                const img = document.createElement('img');
+                img.classList.add('preview-image');
+                img.src = canvas.toDataURL('image/jpeg');
+                previewContainer.appendChild(img);
+                
+                // Enable train button
+                trainButton.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
