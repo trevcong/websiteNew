@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .prompt-section {
+            margin-bottom: 20px;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            text-align: center;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .history-section {
+            margin-top: 40px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .history-item img {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Generation</h1>
+        
+        <div class="prompt-section">
+            <textarea 
+                id="promptInput" 
+                class="prompt-input" 
+                placeholder="Describe the image you want to generate... (e.g., 'A serene landscape with mountains and a lake at sunset')"
+            ></textarea>
+            
+            <div class="controls">
+                <button id="generateBtn" class="btn btn-primary">Generate Image</button>
+                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Generating your image... This may take a few moments.</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="result-section">
+            <img id="generatedImage" class="generated-image" alt="Generated image">
+        </div>
+
+        <div class="history-section">
+            <h2>Generation History</h2>
+            <div id="historyGrid" class="history-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('promptInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const generatedImage = document.getElementById('generatedImage');
+        const errorMessage = document.getElementById('errorMessage');
+        const historyGrid = document.getElementById('historyGrid');
+
+        let generationHistory = [];
+
+        async function generateImage() {
+            const prompt = promptInput.value.trim();
+            
+            if (!prompt) {
+                showError('Please enter a description for the image you want to generate.');
+                return;
+            }
+
+            try {
+                loading.style.display = 'block';
+                generateBtn.disabled = true;
+                errorMessage.style.display = 'none';
+                generatedImage.style.display = 'none';
+
+                const response = await fetch('http://localhost:5001/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    generatedImage.src = data.image;
+                    generatedImage.style.display = 'block';
+                    
+                    // Add to history
+                    addToHistory(prompt, data.image);
+                } else {
+                    throw new Error(data.error || 'Failed to generate image');
+                }
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function addToHistory(prompt, imageUrl) {
+            const historyItem = {
+                prompt,
+                imageUrl,
+                timestamp: new Date().toISOString()
+            };
+
+            generationHistory.unshift(historyItem);
+            if (generationHistory.length > 10) {
+                generationHistory.pop();
+            }
+
+            updateHistoryDisplay();
+            saveHistory();
+        }
+
+        function updateHistoryDisplay() {
+            historyGrid.innerHTML = '';
+            
+            generationHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const img = document.createElement('img');
+                img.src = item.imageUrl;
+                img.alt = item.prompt;
+                
+                const promptText = document.createElement('p');
+                promptText.textContent = item.prompt;
+                
+                historyItem.appendChild(img);
+                historyItem.appendChild(promptText);
+                
+                historyItem.addEventListener('click', () => {
+                    promptInput.value = item.prompt;
+                    generatedImage.src = item.imageUrl;
+                    generatedImage.style.display = 'block';
+                });
+                
+                historyGrid.appendChild(historyItem);
+            });
+        }
+
+        function saveHistory() {
+            localStorage.setItem('generationHistory', JSON.stringify(generationHistory));
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('generationHistory');
+            if (saved) {
+                generationHistory = JSON.parse(saved);
+                updateHistoryDisplay();
+            }
+        }
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateImage);
+        
+        clearBtn.addEventListener('click', () => {
+            promptInput.value = '';
+            generatedImage.style.display = 'none';
+            errorMessage.style.display = 'none';
+        });
+
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateImage();
+            }
+        });
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html>

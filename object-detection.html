@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .upload-container.dragover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px auto;
+        }
+
+        #uploadedImage {
+            display: block;
+            max-width: 100%;
+        }
+
+        #detectionBoxes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .detection-box {
+            position: absolute;
+            border: 2px solid #00ff00;
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+
+        .detection-label {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            transform: translateY(-100%);
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Object Detection Demo</h1>
+    
+    <div class="upload-container" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <button onclick="document.getElementById('fileInput').click()">Choose Image</button>
+        <p>or drag and drop an image here</p>
+    </div>
+
+    <div class="image-container">
+        <img id="uploadedImage" alt="Uploaded image">
+        <div id="detectionBoxes"></div>
+    </div>
+
+    <div class="loading" id="loading">
+        Processing image... Please wait...
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        let lastDetections = null;
+
+        // File input change handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage.src = e.target.result;
+                uploadedImage.style.display = 'block';
+                document.getElementById('detectionBoxes').innerHTML = '';
+                results.innerHTML = '';
+                
+                // Wait for image to load before detecting
+                uploadedImage.onload = () => detectObjects(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function detectObjects(imageData) {
+            loading.style.display = 'block';
+            results.innerHTML = 'Processing image...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/detect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastDetections = data.detections;
+                    displayDetections(data.detections);
+                } else {
+                    throw new Error(data.error || 'Detection failed');
+                }
+            } catch (error) {
+                console.error('Detection error:', error);
+                results.innerHTML = `
+                    <div style="color: red; padding: 10px; background-color: #fee; border-radius: 4px;">
+                        <strong>Error:</strong> ${error.message}
+                        <br><br>
+                        Troubleshooting steps:
+                        <ul>
+                            <li>Make sure the Python server is running (python app.py)</li>
+                            <li>Check that the model path is correct</li>
+                            <li>Verify the image format is supported (JPG, PNG)</li>
+                            <li>Try refreshing the page and uploading again</li>
+                        </ul>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayDetections(detections) {
+            const detectionBoxes = document.getElementById('detectionBoxes');
+            
+            // Clear previous detections
+            detectionBoxes.innerHTML = '';
+            
+            // Get the actual displayed image dimensions
+            const imageWidth = uploadedImage.offsetWidth;
+            const imageHeight = uploadedImage.offsetHeight;
+
+            // Display results list
+            results.innerHTML = '<h2>Detected Objects:</h2>';
+            if (detections.length === 0) {
+                results.innerHTML += '<p>No objects detected.</p>';
+                return;
+            }
+
+            const list = document.createElement('ul');
+            
+            detections.forEach(detection => {
+                // Calculate scaled coordinates
+                const scaleX = imageWidth / uploadedImage.naturalWidth;
+                const scaleY = imageHeight / uploadedImage.naturalHeight;
+                
+                const x = detection.box.x * scaleX;
+                const y = detection.box.y * scaleY;
+                const width = detection.box.width * scaleX;
+                const height = detection.box.height * scaleY;
+
+                // Add to list
+                const li = document.createElement('li');
+                li.textContent = `${detection.label} (${(detection.confidence * 100).toFixed(1)}% confidence)`;
+                list.appendChild(li);
+
+                // Create detection box
+                const box = document.createElement('div');
+                box.className = 'detection-box';
+                Object.assign(box.style, {
+                    left: `${x}px`,
+                    top: `${y}px`,
+                    width: `${width}px`,
+                    height: `${height}px`
+                });
+
+                // Create label
+                const label = document.createElement('div');
+                label.className = 'detection-label';
+                label.textContent = `${detection.label} ${(detection.confidence * 100).toFixed(1)}%`;
+                Object.assign(label.style, {
+                    left: `${x}px`,
+                    top: `${y}px`
+                });
+
+                detectionBoxes.appendChild(box);
+                detectionBoxes.appendChild(label);
+            });
+
+            results.appendChild(list);
+        }
+
+        // Update boxes on window resize
+        window.addEventListener('resize', () => {
+            if (lastDetections) {
+                displayDetections(lastDetections);
+            }
+        });
+    </script>
+</body>
+</html>

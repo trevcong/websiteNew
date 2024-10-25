@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Predictions</title>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            height: 400px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .prediction-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .prediction-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .up {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .down {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .metrics-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Prediction Analysis</h1>
+        
+        <div class="search-section">
+            <input 
+                type="text" 
+                id="tickerInput" 
+                class="search-input" 
+                placeholder="Enter stock ticker (e.g., AAPL, GOOGL)"
+            >
+            <button id="searchBtn" class="btn btn-primary">Search</button>
+        </div>
+
+        <div id="loading" class="loading">
+            Processing... Please wait...
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Current Price</h3>
+                <div id="currentPrice">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Daily Change</h3>
+                <div id="dailyChange">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Volume</h3>
+                <div id="volume">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Market Cap</h3>
+                <div id="marketCap">-</div>
+            </div>
+        </div>
+
+        <div class="prediction-section">
+            <h2>AI Prediction Analysis</h2>
+            <button id="predictBtn" class="btn btn-primary">Generate Prediction</button>
+            <div id="predictionResult" class="prediction-result"></div>
+            
+            <div class="metrics-section">
+                <h3>Model Metrics</h3>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <h4>Accuracy</h4>
+                        <div class="metric-value" id="accuracy">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Confidence</h4>
+                        <div class="metric-value" id="confidence">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Risk Score</h4>
+                        <div class="metric-value" id="riskScore">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+function displayPredictionResults(data) {
+    const predictionResult = document.getElementById('predictionResult');
+    const direction = data.prediction === 'up' ? '📈 UP' : '📉 DOWN';
+    
+    // Create detailed analysis HTML
+    const analysisHtml = `
+        <div class="prediction-details">
+            <div class="prediction-header ${data.prediction}">
+                <h3>Prediction: ${direction}</h3>
+                <p class="probability">Probability: ${data.probability.toFixed(1)}%</p>
+                <p>Confidence Score: ${data.confidence_score}</p>
+            </div>
+            
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h4>Technical Signals</h4>
+                    <ul>
+                        ${Object.entries(data.signals.technical).map(([key, value]) => 
+                            `<li class="${value}">${key.replace(/_/g, ' ').toUpperCase()}: ${value}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                
+                <div class="analysis-card">
+                    <h4>Momentum Signals</h4>
+                    <ul>
+                        ${Object.entries(data.signals.momentum).map(([key, value]) => 
+                            `<li>${key.replace(/_/g, ' ').toUpperCase()}: ${value}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="supporting-factors">
+                <h4>Supporting Factors:</h4>
+                <ul>
+                    ${data.supporting_factors.map(factor => 
+                        `<li>${factor}</li>`
+                    ).join('')}
+                </ul>
+            </div>
+            
+            <div class="recommendation-box">
+                <h4>Recommendation</h4>
+                <p class="action ${data.recommendation.action}">${data.recommendation.action.toUpperCase().replace('_', ' ')}</p>
+                <div class="levels">
+                    <p>Stop Loss: $${data.recommendation.stop_loss.toFixed(2)}</p>
+                    <p>Take Profit: $${data.recommendation.take_profit.toFixed(2)}</p>
+                </div>
+            </div>
+
+            <div class="key-levels">
+                <h4>Key Price Levels</h4>
+                <p>Support: $${data.key_levels.support.toFixed(2)}</p>
+                <p>Resistance: $${data.key_levels.resistance.toFixed(2)}</p>
+                <p>Current Price: $${data.key_levels.current_price.toFixed(2)}</p>
+            </div>
+        </div>
+    `;
+    
+    predictionResult.innerHTML = analysisHtml;
+
+    // Update metrics if they exist
+    if (document.getElementById('accuracy')) {
+        document.getElementById('accuracy').textContent = 
+            data.metrics ? `${(data.metrics.accuracy * 100).toFixed(1)}%` : 'N/A';
+    }
+    if (document.getElementById('confidence')) {
+        document.getElementById('confidence').textContent = 
+            `${data.probability.toFixed(1)}%`;
+    }
+    if (document.getElementById('riskScore')) {
+        document.getElementById('riskScore').textContent = 
+            data.metrics ? data.metrics.risk_score.toFixed(2) : 'N/A';
+    }
+}
+
+// Add this CSS
+const styles = `
+    .prediction-details {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+
+    .analysis-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .bullish { color: #28a745; }
+    .bearish { color: #dc3545; }
+
+    .supporting-factors {
+        margin: 20px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .recommendation-box {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .action {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .strong_buy { color: #28a745; }
+    .buy { color: #5cb85c; }
+    .hold { color: #ffc107; }
+    .sell { color: #dc3545; }
+    .strong_sell { color: #c82333; }
+`;
+
+// Add styles to document
+const styleSheet = document.createElement('style');
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
+        let stockChart = null;
+
+        async function searchStock() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!ticker) {
+                showError('Please enter a stock ticker');
+                return;
+            }
+
+            try {
+                loading.style.display = 'block';
+                errorMessage.style.display = 'none';
+
+                const response = await fetch(`http://localhost:5002/stock/${ticker}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                updateChart(data.prices);
+                updateStats(data.stats);
+                document.getElementById('predictBtn').disabled = false;
+
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function generatePrediction() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const loading = document.getElementById('loading');
+            const predictionResult = document.getElementById('predictionResult');
+
+            try {
+                loading.style.display = 'block';
+                predictionResult.className = 'prediction-result';
+
+                const response = await fetch(`http://localhost:5002/predict/${ticker}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Update prediction result
+                predictionResult.textContent = `Prediction: ${data.prediction === 'up' ? '📈 UP' : '📉 DOWN'} (${data.probability.toFixed(2)}% probability)`;
+                predictionResult.classList.add(data.prediction);
+
+                // Update metrics
+                document.getElementById('accuracy').textContent = `${(data.metrics.accuracy * 100).toFixed(1)}%`;
+                document.getElementById('confidence').textContent = `${(data.metrics.confidence * 100).toFixed(1)}%`;
+                document.getElementById('riskScore').textContent = data.metrics.risk_score.toFixed(2);
+
+            } catch (error) {
+                showError(`Prediction error: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function updateChart(prices) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+
+            if (stockChart) {
+                stockChart.destroy();
+            }
+
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: prices.map(p => p.date),
+                    datasets: [{
+                        label: 'Stock Price',
+                        data: prices.map(p => p.price),
+                        borderColor: '#007bff',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Stock Price History'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStats(stats) {
+            document.getElementById('currentPrice').textContent = `$${stats.current_price.toFixed(2)}`;
+            document.getElementById('dailyChange').textContent = `${stats.daily_change > 0 ? '+' : ''}${stats.daily_change.toFixed(2)}%`;
+            document.getElementById('volume').textContent = stats.volume.toLocaleString();
+            document.getElementById('marketCap').textContent = `$${(stats.market_cap / 1e9).toFixed(2)}B`;
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // Event listeners
+        document.getElementById('searchBtn').addEventListener('click', searchStock);
+        document.getElementById('predictBtn').addEventListener('click', generatePrediction);
+        document.getElementById('tickerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchStock();
+            }
+        });
+    </script>
+</body>
+</html>
