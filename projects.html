@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Projects</title>
+    <style>
+        /* Consistent styling with index.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            padding-top: 60px; /* To prevent content from being hidden under the fixed nav */
+        }
+
+        nav {
+            background: #333;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: flex-end;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav ul li {
+            margin-left: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: #555;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .project-card {
+            background: #fff;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .project-card h2 {
+            margin-top: 0;
+        }
+
+        .project-card p {
+            line-height: 1.6;
+        }
+
+        .project-card a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+            border: 1px solid #007bff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .project-card a:hover {
+            background: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li><a href="login.html" class="btn">ML Demo Login</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>My Projects</h1>
+
+        <!-- Project 1 -->
+        <div class="project-card">
+            <h2>Project: My Personal Website</h2>
+            <p>This website is a showcase of my skills and projects, hosted on DigitalOcean, and built using a combination of modern web technologies. Here's a breakdown of the tools and technologies I used to create and deploy the site:</p>
+          
+            <h3>Hosting: DigitalOcean</h3>
+            <p>The website is hosted on a <strong>DigitalOcean Droplet</strong>, a scalable and secure cloud computing platform. DigitalOcean provides reliable infrastructure and an easy-to-use interface, allowing me to quickly deploy my web server and manage the server resources effectively.</p>
+          
+            <h3>Web Server: Nginx</h3>
+            <p>For serving my website and managing web traffic, I used <strong>Nginx</strong>, a high-performance web server known for its efficiency and scalability. Nginx handles static content and proxies dynamic requests to the backend Flask server (for features like user authentication and other API requests).</p>
+            <p>Nginx is configured to:</p>
+            <ul>
+              <li>Serve static HTML, CSS, and JavaScript files to users.</li>
+              <li>Proxy requests for dynamic content (such as login requests and machine learning tasks) to the Flask server running on the same machine.</li>
+            </ul>
+          
+            <h3>Backend: Flask (Python)</h3>
+            <p>The backend of my website is built using <strong>Flask</strong>, a lightweight Python web framework. Flask is used for handling user authentication, API requests, and other dynamic interactions with the website.</p>
+            <p><strong>Firebase</strong> is integrated into the Flask app for user authentication, allowing users to securely log in to access restricted pages.</p>
+          
+            <h3>Frontend: HTML, CSS, JavaScript</h3>
+            <p>The frontend of the website is designed using <strong>HTML5</strong>, <strong>CSS3</strong>, and <strong>JavaScript</strong>. The layout is responsive and optimized for mobile and desktop viewing.</p>
+            <p>I also use <strong>JavaScript</strong> for dynamic interactions on the site, such as form submissions and AJAX calls for smooth user experiences.</p>
+          
+            <h3>Database: Firebase (for Authentication)</h3>
+            <p><strong>Firebase</strong> is used for <strong>user authentication</strong>, allowing users to log in securely using their Google accounts (or other methods as configured). Firebase provides a simple and reliable way to manage user data and authentication without the need to build a complex backend system.</p>
+          
+            <h3>Deployment & Configuration</h3>
+            <p>The website is deployed on a <strong>DigitalOcean Droplet</strong> using a <strong>Linux-based operating system</strong> (Ubuntu). Nginx is configured to serve the static content and reverse-proxy dynamic requests to Flask, which listens on a different port (e.g., port 5000).</p>
+            <p>I have set up SSL/TLS encryption with <strong>Let's Encrypt</strong> to ensure secure communication via HTTPS.</p>
+          
+            <h3>Other Tools:</h3>
+            <ul>
+              <li><strong>GitHub</strong> for version control and code management, allowing me to keep track of changes and collaborate on the project.</li>
+              <li><strong>Python's virtual environment (venv)</strong> to isolate the Flask backend's dependencies.</li>
+              <li><strong>UFW (Uncomplicated Firewall)</strong> for securing the server and allowing traffic only from authorized sources.</li>
+            </ul>
+          
+            <h3>Project Highlights:</h3>
+            <ul>
+              <li><strong>Scalability</strong>: The project is scalable, as DigitalOcean Droplets allow me to easily increase the server’s capacity based on demand.</li>
+              <li><strong>Security</strong>: SSL encryption ensures that data is transmitted securely between the server and users.</li>
+              <li><strong>Modularity</strong>: The backend is modular, allowing me to easily extend the site with additional functionality like machine learning tasks, APIs, or more interactive features.</li>
+            </ul>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="project-card">
+            <h2>Machine Learning Project: Predicting Housing Prices</h2>
+            <p>This project involved building a machine learning model to predict housing prices based on various factors such as location, size, number of rooms, and more. The goal was to explore different algorithms and techniques to create an accurate model.</p>
+          
+            <h3>Technologies Used:</h3>
+            <ul>
+              <li><strong>Python</strong>: The main programming language used for data processing, model building, and evaluation.</li>
+              <li><strong>Scikit-learn</strong>: A machine learning library for building and evaluating models. It was used for regression models like Linear Regression and Random Forest Regressor.</li>
+              <li><strong>Pandas</strong>: A powerful library for data manipulation and analysis, used for handling and processing the dataset.</li>
+              <li><strong>NumPy</strong>: A package for numerical computations, used for array operations and mathematical functions.</li>
+              <li><strong>Matplotlib/Seaborn</strong>: Libraries used for data visualization, creating graphs and plots to understand the data and results.</li>
+              <li><strong>Jupyter Notebooks</strong>: A web-based interactive computing environment used for exploring data, visualizing results, and documenting the project.</li>
+            </ul>
+          
+            <h3>Process:</h3>
+            <ol>
+              <li><strong>Data Collection:</strong> The dataset used for this project was sourced from a real estate platform, containing information about various properties.</li>
+              <li><strong>Data Cleaning:</strong> Missing values were handled, outliers were detected and removed, and the dataset was transformed to ensure all features were in the correct format for the model.</li>
+              <li><strong>Feature Engineering:</strong> New features were created based on existing data, such as extracting the year of construction from the date field.</li>
+              <li><strong>Model Training:</strong> Multiple machine learning models, including Linear Regression and Random Forest, were trained on the data to predict housing prices.</li>
+              <li><strong>Model Evaluation:</strong> The models were evaluated using metrics like Mean Absolute Error (MAE), Mean Squared Error (MSE), and R-squared to measure their accuracy and performance.</li>
+              <li><strong>Hyperparameter Tuning:</strong> GridSearchCV was used to find the best hyperparameters for the models, improving their performance.</li>
+            </ol>
+          
+            <h3>Results:</h3>
+            <p>The best model achieved an R-squared value of 0.92, meaning that it could explain 92% of the variance in housing prices. The Random Forest Regressor performed better than Linear Regression, likely due to its ability to handle non-linear relationships in the data.</p>
+          
+            <h3>Challenges and Learnings:</h3>
+            <ul>
+              <li>Handling missing data and outliers was a challenge, but the use of imputation and data transformation helped improve the model's accuracy.</li>
+              <li>Choosing the right model and fine-tuning its hyperparameters required several iterations, but it was a valuable learning experience in model selection and optimization.</li>
+              <li>Visualization of the data played a crucial role in understanding relationships between features and the target variable, which helped in feature engineering.</li>
+            </ul>
+          
+            <h3>Future Improvements:</h3>
+            <ul>
+              <li>Incorporating more advanced algorithms such as Gradient Boosting Machines (GBM) or XGBoost for improved performance.</li>
+              <li>Exploring other feature engineering techniques to extract additional relevant features from the dataset.</li>
+              <li>Using more comprehensive datasets that include additional features such as neighborhood crime rates, school ratings, etc.</li>
+            </ul>
+        </div>
+        <div class="project-card">
+            <h2>Project: Mastermind Game in Java</h2>
+            <p>This project involves building a simple console-based version of the classic Mastermind game using Java. The goal was to implement the game logic and create an interactive user interface that allows players to guess a sequence of colors in a limited number of attempts.</p>
+          
+            <h3>Technologies Used:</h3>
+            <ul>
+              <li><strong>Java</strong>: The primary programming language used to implement the game logic, user interface, and random sequence generation.</li>
+              <li><strong>Java Collections</strong>: Used for storing and managing the guesses, the secret code, and the feedback given to the player.</li>
+              <li><strong>Scanner</strong>: A utility class in Java used for reading user input from the console.</li>
+            </ul>
+          
+            <h3>Game Rules:</h3>
+            <ul>
+              <li>The game involves a secret code consisting of 4 colored pegs chosen randomly from a set of 6 colors.</li>
+              <li>The player must guess the secret code within a limited number of turns (e.g., 10 guesses).</li>
+              <li>After each guess, the game provides feedback in the form of black and white pegs:
+                <ul>
+                  <li>Black peg: A correct color in the correct position.</li>
+                  <li>White peg: A correct color in the wrong position.</li>
+                </ul>
+              </li>
+              <li>The player continues to guess until they either find the secret code or run out of attempts.</li>
+            </ul>
+          
+            <h3>Process:</h3>
+            <ol>
+              <li><strong>Secret Code Generation:</strong> The secret code is randomly generated by the program, selecting colors from a predefined set.</li>
+              <li><strong>Player Input:</strong> The player is prompted to input their guess, which consists of a series of color choices.</li>
+              <li><strong>Feedback Mechanism:</strong> After each guess, the program compares the guess with the secret code and provides feedback based on the number of correct colors in the correct or incorrect positions.</li>
+              <li><strong>Game Loop:</strong> The game continues to loop, accepting guesses and providing feedback, until the player either solves the puzzle or runs out of attempts.</li>
+            </ol>
+          
+            <h3>Features:</h3>
+            <ul>
+              <li><strong>Color Validation:</strong> The program ensures that the player's guess contains valid colors from the allowed set.</li>
+              <li><strong>Attempts Counter:</strong> The game keeps track of the number of attempts the player has made, ensuring they stay within the allowed number of guesses.</li>
+              <li><strong>Replay Option:</strong> Once the game is over, the player has the option to play again without restarting the program.</li>
+            </ul>
+          
+            <h3>Challenges and Learnings:</h3>
+            <ul>
+              <li>Handling input validation was tricky, especially ensuring the player entered valid guesses and handling edge cases like invalid characters or extra spaces.</li>
+              <li>Implementing the feedback mechanism, ensuring accurate counting of black and white pegs, required careful attention to detail in comparing the guesses to the secret code.</li>
+              <li>Improving user experience with clear instructions and feedback was a priority to ensure the player could easily understand the game flow.</li>
+            </ul>
+          
+            <h3>Future Improvements:</h3>
+            <ul>
+              <li><strong>GUI Version:</strong> Moving from a console-based interface to a graphical user interface (GUI) using JavaFX or Swing to provide a more interactive experience.</li>
+              <li><strong>Difficulty Levels:</strong> Adding difficulty levels, such as varying the number of colors or the length of the secret code, to make the game more challenging.</li>
+              <li><strong>Hints System:</strong> Implementing a hint system that provides additional clues to the player if they’re stuck.</li>
+            </ul>
+        </div>
+        <!-- Add more projects as needed -->
+    </div>
+</body>
+</html>
